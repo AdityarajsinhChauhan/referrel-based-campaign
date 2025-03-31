@@ -1,10 +1,11 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+// Context for managing authentication state across the application
 const AuthContext = createContext();
 
-// Separate the hook definition
+// Custom hook to access authentication context
 function useAuth() {
     const context = useContext(AuthContext);
     if (!context) {
@@ -13,12 +14,13 @@ function useAuth() {
     return context;
 }
 
+// Provider component that wraps the app and manages authentication state
 function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for token in URL (after OAuth redirect)
+        // Initialize authentication state by checking token from URL (OAuth redirect) or localStorage
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         
@@ -26,10 +28,8 @@ function AuthProvider({ children }) {
             localStorage.setItem('token', token);
             const decoded = jwtDecode(token);
             setUser(decoded);
-            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-            // Check for token in localStorage
             const storedToken = localStorage.getItem('token');
             if (storedToken) {
                 const decoded = jwtDecode(storedToken);
@@ -39,10 +39,12 @@ function AuthProvider({ children }) {
         setLoading(false);
     }, []);
 
+    // Redirect to Google OAuth login
     const login = () => {
         window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/google`;
     };
 
+    // Clear authentication state and token
     const logout = () => {
         localStorage.removeItem('token');
         setUser(null);

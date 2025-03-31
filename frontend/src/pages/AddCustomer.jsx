@@ -1,87 +1,120 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 
-const AddCustomer = ({ onCustomerAdded }) => {
-    const { user } = useAuth();
-    const [customer, setCustomer] = useState({ name: '', email: '', phone: '' });
+const AddCustomer = () => {
+    const navigate = useNavigate();
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-
-    const handleChange = (e) => {
-        setCustomer({ ...customer, [e.target.name]: e.target.value });
-    };
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        address: ''
+    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/customers`, {
-                ...customer,
-                businessId: user.id // Assuming user.id is the business ID
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setSuccess('Customer added successfully!');
-            setCustomer({ name: '', email: '', phone: '' }); // Reset form
-            onCustomerAdded(); // Call the callback to refresh the customer list
+            await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/api/business/customers`,
+                formData,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            navigate('/customers');
         } catch (error) {
-            // Check if error response exists and set the error message accordingly
-            const errorMessage = error.response ? error.response.data.message : 'An unexpected error occurred';
-            setError('Error adding customer: ' + errorMessage);
+            setError('Error adding customer');
         }
     };
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    if (error) return <div>{error}</div>;
+
     return (
-        <div className="max-w-md mx-auto mt-10">
-            <h1 className="text-2xl font-bold mb-4">Add Customer</h1>
-            {error && <p className="text-red-500">{error}</p>}
-            {success && <p className="text-green-500">{success}</p>}
-            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-2xl font-bold mb-6">Add New Customer</h1>
+            
+            <form onSubmit={handleSubmit} className="max-w-2xl bg-white rounded-lg shadow p-6">
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
                         Name
                     </label>
                     <input
                         type="text"
+                        id="name"
                         name="name"
-                        value={customer.name}
+                        value={formData.name}
                         onChange={handleChange}
-                        required
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
                     />
                 </div>
+
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
                         Email
                     </label>
                     <input
                         type="email"
+                        id="email"
                         name="email"
-                        value={customer.email}
+                        value={formData.email}
                         onChange={handleChange}
-                        required
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
                     />
                 </div>
+
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phone">
                         Phone
                     </label>
                     <input
-                        type="text"
+                        type="tel"
+                        id="phone"
                         name="phone"
-                        value={customer.phone}
+                        value={formData.phone}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     />
                 </div>
-                <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                >
-                    Add Customer
-                </button>
+
+                <div className="mb-6">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
+                        Address
+                    </label>
+                    <textarea
+                        id="address"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        rows="3"
+                    />
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <button
+                        type="submit"
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                        Add Customer
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => navigate('/customers')}
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                        Cancel
+                    </button>
+                </div>
             </form>
         </div>
     );

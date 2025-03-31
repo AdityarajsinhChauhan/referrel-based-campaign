@@ -1,155 +1,123 @@
-import { useState, useEffect } from 'react';
+// Component for handling user signup through referral links
+// Manages the signup process and referral conversion tracking
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function ReferredSignup() {
+const ReferredSignup = () => {
     const { code } = useParams();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        password: '',
-        confirmPassword: ''
+        phone: '',
+        address: ''
     });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
+    // Handle form submission and referral conversion
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError('');
-
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            setLoading(false);
-            return;
-        }
-
         try {
-            // First create the user account
-            const signupResponse = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/signup`, {
-                name: formData.name,
-                email: formData.email,
-                password: formData.password,
-                referralCode: code // Pass the referral 
-            });
-            console.log(signupResponse.data);
-
-            // If signup successful, track the conversion
-            if (signupResponse.data.token) {
-                await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/referrals/convert/${code}`, {
-                    referredCustomerId: signupResponse.data.user.id
-                });
-
-                // Store the token
-                localStorage.setItem('token', signupResponse.data.token);
-                
-                // Redirect to dashboard or welcome page
-                navigate(`/customer/campaigns`);
-            }
+            await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/api/referrals/convert/${code}`,
+                formData
+            );
+            navigate('/success');
         } catch (error) {
-            setError(error.response?.data?.message || 'Error during signup');
+            setError('Error processing signup');
         } finally {
             setLoading(false);
         }
     };
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    if (loading) return <div>Processing...</div>;
+    if (error) return <div>{error}</div>;
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Create your account
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        You've been referred! Sign up to claim your reward.
-                    </p>
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-2xl font-bold mb-6">Sign Up</h1>
+            
+            <form onSubmit={handleSubmit} className="max-w-2xl bg-white rounded-lg shadow p-6">
+                <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                        Name
+                    </label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
+                    />
                 </div>
 
-                {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        {error}
-                    </div>
-                )}
+                <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+                        Email
+                    </label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
+                    />
+                </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <label htmlFor="name" className="sr-only">Full Name</label>
-                            <input
-                                id="name"
-                                name="name"
-                                type="text"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="Full Name"
-                                value={formData.name}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="email" className="sr-only">Email address</label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="Email address"
-                                value={formData.email}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="sr-only">Password</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="Password"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
-                            <input
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                type="password"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="Confirm Password"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </div>
+                <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phone">
+                        Phone
+                    </label>
+                    <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    />
+                </div>
 
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                                loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-                            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                        >
-                            {loading ? 'Creating account...' : 'Sign up'}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div className="mb-6">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
+                        Address
+                    </label>
+                    <textarea
+                        id="address"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        rows="3"
+                    />
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <button
+                        type="submit"
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                        Sign Up
+                    </button>
+                </div>
+            </form>
         </div>
     );
-}
+};
 
 export default ReferredSignup; 

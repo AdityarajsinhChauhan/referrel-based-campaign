@@ -1,115 +1,93 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function CampaignEdit() {
-    const { id } = useParams();
+const CampaignEdit = () => {
+    const { campaignId } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
-    const [campaign, setCampaign] = useState({
+    const [formData, setFormData] = useState({
         name: '',
-        taskType: '',
+        description: '',
+        rewardType: 'points',
+        rewardAmount: '',
         taskDescription: '',
-        rewardType: '',
-        rewardValue: '',
-        rewardDetails: '',
         startDate: '',
         endDate: '',
-        notificationMessage: '',
-        status: ''
+        status: 'active'
     });
 
     useEffect(() => {
-        fetchCampaign();
-    }, [id]);
+        const fetchCampaign = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${campaignId}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                
+                const campaign = response.data;
+                setFormData({
+                    name: campaign.name,
+                    description: campaign.description,
+                    rewardType: campaign.rewardType,
+                    rewardAmount: campaign.rewardAmount,
+                    taskDescription: campaign.taskDescription,
+                    startDate: campaign.startDate.split('T')[0],
+                    endDate: campaign.endDate.split('T')[0],
+                    status: campaign.status
+                });
+                setLoading(false);
+            } catch (error) {
+                setError('Error fetching campaign');
+                setLoading(false);
+            }
+        };
 
-    const fetchCampaign = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            // Format dates to YYYY-MM-DD for input type="date"
-            const campaignData = {
-                ...response.data,
-                startDate: new Date(response.data.startDate).toISOString().split('T')[0],
-                endDate: new Date(response.data.endDate).toISOString().split('T')[0]
-            };
-            setCampaign(campaignData);
-        } catch (error) {
-            setError(error.response?.data?.message || 'Error fetching campaign');
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchCampaign();
+    }, [campaignId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSaving(true);
-        setError('');
-        setSuccess(false);
-
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${id}`, campaign, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setSuccess(true);
-            setTimeout(() => {
-                navigate('/campaigns');
-            }, 1500);
+            await axios.put(
+                `${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${campaignId}`,
+                formData,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            navigate('/campaigns');
         } catch (error) {
-            setError(error.response?.data?.message || 'Error updating campaign');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } finally {
-            setSaving(false);
+            setError('Error updating campaign');
         }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setCampaign(prev => ({
+        setFormData(prev => ({
             ...prev,
             [name]: value
         }));
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            </div>
-        );
-    }
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>{error}</div>;
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">Edit Campaign</h1>
-
-            {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    {error}
-                </div>
-            )}
-
-            {success && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    Campaign updated successfully! Redirecting...
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-2xl font-bold mb-6">Edit Campaign</h1>
+            
+            <form onSubmit={handleSubmit} className="max-w-2xl bg-white rounded-lg shadow p-6">
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
                         Campaign Name
                     </label>
                     <input
                         type="text"
+                        id="name"
                         name="name"
-                        value={campaign.name}
+                        value={formData.name}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         required
@@ -117,64 +95,48 @@ function CampaignEdit() {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Task Type
-                    </label>
-                    <select
-                        name="taskType"
-                        value={campaign.taskType}
-                        onChange={handleChange}
-                        className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        required
-                    >
-                        <option value="review">Leave a Review</option>
-                        <option value="purchase">Make a Purchase</option>
-                        <option value="form">Fill Out Form</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-
-                <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Task Description
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+                        Description
                     </label>
                     <textarea
-                        name="taskDescription"
-                        value={campaign.taskDescription}
+                        id="description"
+                        name="description"
+                        value={formData.description}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        rows="3"
+                        rows="4"
                         required
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rewardType">
                             Reward Type
                         </label>
                         <select
+                            id="rewardType"
                             name="rewardType"
-                            value={campaign.rewardType}
+                            value={formData.rewardType}
                             onChange={handleChange}
-                            className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
                         >
+                            <option value="points">Points</option>
                             <option value="discount">Discount</option>
-                            <option value="cashback">Cashback</option>
-                            <option value="gift">Gift</option>
-                            <option value="other">Other</option>
+                            <option value="credit">Credit</option>
                         </select>
                     </div>
 
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Reward Value
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rewardAmount">
+                            Reward Amount
                         </label>
                         <input
                             type="number"
-                            name="rewardValue"
-                            value={campaign.rewardValue}
+                            id="rewardAmount"
+                            name="rewardAmount"
+                            value={formData.rewardAmount}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
@@ -183,28 +145,30 @@ function CampaignEdit() {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Reward Details
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="taskDescription">
+                        Task Description
                     </label>
                     <textarea
-                        name="rewardDetails"
-                        value={campaign.rewardDetails}
+                        id="taskDescription"
+                        name="taskDescription"
+                        value={formData.taskDescription}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        rows="2"
+                        rows="4"
                         required
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="startDate">
                             Start Date
                         </label>
                         <input
                             type="date"
+                            id="startDate"
                             name="startDate"
-                            value={campaign.startDate}
+                            value={formData.startDate}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
@@ -212,13 +176,14 @@ function CampaignEdit() {
                     </div>
 
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="endDate">
                             End Date
                         </label>
                         <input
                             type="date"
+                            id="endDate"
                             name="endDate"
-                            value={campaign.endDate}
+                            value={formData.endDate}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
@@ -226,67 +191,42 @@ function CampaignEdit() {
                     </div>
                 </div>
 
-                <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                <div className="mb-6">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="status">
                         Status
                     </label>
                     <select
+                        id="status"
                         name="status"
-                        value={campaign.status}
+                        value={formData.status}
                         onChange={handleChange}
-                        className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         required
                     >
-                        <option value="draft">Draft</option>
                         <option value="active">Active</option>
                         <option value="paused">Paused</option>
                         <option value="completed">Completed</option>
                     </select>
                 </div>
 
-                <div className="mb-6">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Notification Message
-                    </label>
-                    <textarea
-                        name="notificationMessage"
-                        value={campaign.notificationMessage}
-                        onChange={handleChange}
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        rows="3"
-                        placeholder="Message to send to existing customers about this campaign"
-                        required
-                    />
-                </div>
-
-                <div className="flex items-center justify-end gap-4">
+                <div className="flex items-center justify-between">
+                    <button
+                        type="submit"
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                        Update Campaign
+                    </button>
                     <button
                         type="button"
                         onClick={() => navigate('/campaigns')}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                     >
                         Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className={`${
-                            saving ? 'bg-blue-400' : 'bg-blue-500 hover:bg-blue-600'
-                        } text-white px-4 py-2 rounded flex items-center`}
-                    >
-                        {saving ? (
-                            <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Saving...
-                            </>
-                        ) : (
-                            'Save Changes'
-                        )}
                     </button>
                 </div>
             </form>
         </div>
     );
-}
+};
 
 export default CampaignEdit; 

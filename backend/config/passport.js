@@ -22,14 +22,12 @@ passport.use(new GoogleStrategy({
     scope: ['profile', 'email']
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        // Check if user already exists
         const existingUser = await User.findOne({ googleId: profile.id });
         
         if (existingUser) {
             return done(null, existingUser);
         }
 
-        // Create new user
         const newUser = await new User({
             googleId: profile.id,
             email: profile.emails[0].value,

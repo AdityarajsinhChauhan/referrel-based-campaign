@@ -1,81 +1,65 @@
-import { useState } from 'react';
+// Component for creating new referral campaigns
+// Handles form submission and campaign configuration
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function CampaignCreate() {
+const CampaignCreate = () => {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
-    const [campaign, setCampaign] = useState({
+    
+    // Initial form state with default values
+    const [formData, setFormData] = useState({
         name: '',
-        taskType: 'review',
+        description: '',
+        rewardType: 'points',
+        rewardAmount: '',
         taskDescription: '',
-        rewardType: 'discount',
-        rewardValue: '',
-        rewardDetails: '',
         startDate: '',
         endDate: '',
-        notificationMessage: ''
+        status: 'active'
     });
 
+    // Handle form submission and campaign creation
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
-        setSuccess(false);
-
         try {
             const token = localStorage.getItem('token');
-            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns`, campaign, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setSuccess(true);
-            // Wait for 1.5 seconds to show the success message before redirecting
-            setTimeout(() => {
-                navigate('/campaigns');
-            }, 1500);
+            await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/api/campaigns`,
+                formData,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            navigate('/campaigns');
         } catch (error) {
-            setError(error.response?.data?.message || 'Error creating campaign');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } finally {
-            setLoading(false);
+            setError('Error creating campaign');
         }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setCampaign(prev => ({
+        setFormData(prev => ({
             ...prev,
             [name]: value
         }));
     };
 
+    if (error) return <div>{error}</div>;
+
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">Create New Campaign</h1>
-
-            {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    {error}
-                </div>
-            )}
-
-            {success && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    Campaign created successfully! Redirecting...
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-2xl font-bold mb-6">Create New Campaign</h1>
+            
+            <form onSubmit={handleSubmit} className="max-w-2xl bg-white rounded-lg shadow p-6">
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
                         Campaign Name
                     </label>
                     <input
                         type="text"
+                        id="name"
                         name="name"
-                        value={campaign.name}
+                        value={formData.name}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         required
@@ -83,64 +67,48 @@ function CampaignCreate() {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Task Type
-                    </label>
-                    <select
-                        name="taskType"
-                        value={campaign.taskType}
-                        onChange={handleChange}
-                        className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        required
-                    >
-                        <option value="review">Leave a Review</option>
-                        <option value="purchase">Make a Purchase</option>
-                        <option value="form">Fill Out Form</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-
-                <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Task Description
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+                        Description
                     </label>
                     <textarea
-                        name="taskDescription"
-                        value={campaign.taskDescription}
+                        id="description"
+                        name="description"
+                        value={formData.description}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        rows="3"
+                        rows="4"
                         required
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rewardType">
                             Reward Type
                         </label>
                         <select
+                            id="rewardType"
                             name="rewardType"
-                            value={campaign.rewardType}
+                            value={formData.rewardType}
                             onChange={handleChange}
-                            className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
                         >
+                            <option value="points">Points</option>
                             <option value="discount">Discount</option>
-                            <option value="cashback">Cashback</option>
-                            <option value="gift">Gift</option>
-                            <option value="other">Other</option>
+                            <option value="credit">Credit</option>
                         </select>
                     </div>
 
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Reward Value
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rewardAmount">
+                            Reward Amount
                         </label>
                         <input
                             type="number"
-                            name="rewardValue"
-                            value={campaign.rewardValue}
+                            id="rewardAmount"
+                            name="rewardAmount"
+                            value={formData.rewardAmount}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
@@ -149,28 +117,30 @@ function CampaignCreate() {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Reward Details
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="taskDescription">
+                        Task Description
                     </label>
                     <textarea
-                        name="rewardDetails"
-                        value={campaign.rewardDetails}
+                        id="taskDescription"
+                        name="taskDescription"
+                        value={formData.taskDescription}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        rows="2"
+                        rows="4"
                         required
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="startDate">
                             Start Date
                         </label>
                         <input
                             type="date"
+                            id="startDate"
                             name="startDate"
-                            value={campaign.startDate}
+                            value={formData.startDate}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
@@ -178,13 +148,14 @@ function CampaignCreate() {
                     </div>
 
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="endDate">
                             End Date
                         </label>
                         <input
                             type="date"
+                            id="endDate"
                             name="endDate"
-                            value={campaign.endDate}
+                            value={formData.endDate}
                             onChange={handleChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
@@ -193,48 +164,41 @@ function CampaignCreate() {
                 </div>
 
                 <div className="mb-6">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Notification Message
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="status">
+                        Status
                     </label>
-                    <textarea
-                        name="notificationMessage"
-                        value={campaign.notificationMessage}
+                    <select
+                        id="status"
+                        name="status"
+                        value={formData.status}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        rows="3"
-                        placeholder="Message to send to existing customers about this campaign"
                         required
-                    />
+                    >
+                        <option value="active">Active</option>
+                        <option value="paused">Paused</option>
+                        <option value="completed">Completed</option>
+                    </select>
                 </div>
 
-                <div className="flex items-center justify-end gap-4">
+                <div className="flex items-center justify-between">
+                    <button
+                        type="submit"
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                        Create Campaign
+                    </button>
                     <button
                         type="button"
                         onClick={() => navigate('/campaigns')}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                     >
                         Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`${
-                            loading ? 'bg-blue-400' : 'bg-blue-500 hover:bg-blue-600'
-                        } text-white px-4 py-2 rounded flex items-center`}
-                    >
-                        {loading ? (
-                            <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Creating...
-                            </>
-                        ) : (
-                            'Create Campaign'
-                        )}
                     </button>
                 </div>
             </form>
         </div>
     );
-}
+};
 
 export default CampaignCreate; 

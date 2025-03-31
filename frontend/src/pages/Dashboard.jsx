@@ -1,189 +1,117 @@
-import { useState, useEffect } from 'react';
+// Main dashboard component displaying campaign statistics and recent activity
+// Shows key metrics, active campaigns, and customer engagement data
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
-function Dashboard() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState({
-    totalCustomers: 0,
-    activeCampaigns: 0,
-    totalRewards: 0
-  });
-  const [recentCampaigns, setRecentCampaigns] = useState([]);
-  const [loadingData, setLoadingData] = useState(true);
+const Dashboard = () => {
+    // State for managing dashboard data and loading states
+    const [stats, setStats] = useState({
+        totalCampaigns: 0,
+        activeCampaigns: 0,
+        totalCustomers: 0,
+        totalReferrals: 0
+    });
+    const [recentCampaigns, setRecentCampaigns] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    useEffect(() => {
+        // Fetch dashboard data including stats and recent campaigns
+        const fetchDashboardData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchDashboardData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
+                const [statsRes, campaignsRes] = await Promise.all([
+                    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/dashboard/stats`, { headers }),
+                    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/recent`, { headers })
+                ]);
 
-      // Fetch campaigns
-      const campaignsRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns`, { headers });
-      const activeCampaigns = campaignsRes.data.filter(c => c.status === 'active');
-      setRecentCampaigns(campaignsRes.data.slice(0, 3)); // Get 3 most recent campaigns
+                setStats(statsRes.data);
+                setRecentCampaigns(campaignsRes.data);
+                setLoading(false);
+            } catch (error) {
+                setError('Error fetching dashboard data');
+                setLoading(false);
+            }
+        };
 
-      // Fetch customers
-      const customersRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/business/customers`, { headers });
+        fetchDashboardData();
+    }, []);
 
-      setStats({
-        totalCustomers: customersRes.data.length,
-        activeCampaigns: activeCampaigns.length,
-        totalRewards: campaignsRes.data.reduce((sum, campaign) => sum + (campaign.totalRewardsGiven || 0), 0)
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoadingData(false);
-    }
-  };
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>{error}</div>;
 
-  if (loadingData) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="py-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Welcome back! Manage your referral campaigns and track your progress.
-        </p>
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Quick Stats */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Customers
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {stats.totalCustomers}
-                  </dd>
-                </dl>
-              </div>
+        <div className="container mx-auto px-4 py-8">
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-2xl font-bold">Dashboard</h1>
+                <Link
+                    to="/campaigns/new"
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                >
+                    Create Campaign
+                </Link>
             </div>
-          </div>
-        </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Active Campaigns
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {stats.activeCampaigns}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Rewards Given
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {stats.totalRewards}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Campaigns */}
-      {recentCampaigns.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Campaigns</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {recentCampaigns.map(campaign => (
-              <div key={campaign._id} className="bg-white shadow rounded-lg p-4">
-                <h3 className="text-md font-medium text-gray-900">{campaign.name}</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  {campaign.totalReferrals || 0} referrals · {campaign.totalRewardsGiven || 0} rewards
-                </p>
-                <div className="mt-4">
-                  <Link
-                    to={`/campaigns/${campaign._id}/referrals`}
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    View Referrals →
-                  </Link>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-gray-500 text-sm font-medium">Total Campaigns</h3>
+                    <p className="text-2xl font-bold">{stats.totalCampaigns}</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="mt-8">
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              Quick Actions
-            </h3>
-            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Link
-                to="/campaigns/create"
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                Create Campaign
-              </Link>
-              <Link
-                to="/campaigns"
-                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                View All Campaigns
-              </Link>
-              <Link
-                to="/customers"
-                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Manage Customers
-              </Link>
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-gray-500 text-sm font-medium">Active Campaigns</h3>
+                    <p className="text-2xl font-bold">{stats.activeCampaigns}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-gray-500 text-sm font-medium">Total Customers</h3>
+                    <p className="text-2xl font-bold">{stats.totalCustomers}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-gray-500 text-sm font-medium">Total Referrals</h3>
+                    <p className="text-2xl font-bold">{stats.totalReferrals}</p>
+                </div>
             </div>
-          </div>
+
+            <div className="bg-white rounded-lg shadow">
+                <div className="p-6 border-b">
+                    <h2 className="text-xl font-semibold">Recent Campaigns</h2>
+                </div>
+                <div className="divide-y">
+                    {recentCampaigns.map(campaign => (
+                        <div key={campaign._id} className="p-6">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-lg font-medium">
+                                        <Link to={`/campaigns/${campaign._id}`} className="text-blue-600 hover:text-blue-800">
+                                            {campaign.name}
+                                        </Link>
+                                    </h3>
+                                    <p className="text-gray-600">{campaign.description}</p>
+                                </div>
+                                <span className={`px-2 py-1 rounded-full text-sm ${
+                                    campaign.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    campaign.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                }`}>
+                                    {campaign.status}
+                                </span>
+                            </div>
+                            <div className="mt-4 flex space-x-4 text-sm">
+                                <span className="text-gray-500">
+                                    Start: {new Date(campaign.startDate).toLocaleDateString()}
+                                </span>
+                                <span className="text-gray-500">
+                                    End: {new Date(campaign.endDate).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
-}
+    );
+};
 
 export default Dashboard; 
