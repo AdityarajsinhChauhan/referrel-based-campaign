@@ -127,40 +127,39 @@ router.post('/convert/:code', async (req, res) => {
             return res.status(404).json({ message: 'Campaign not found' });
         }
 
-        // Try to find existing customer or user
+        // Try to find existing customer by referredCustomerId
         let customer = await Customer.findById(referredCustomerId);
-        
+
+        // If customer does not exist, check if it's a user ID
         if (!customer) {
-            // If not a customer ID, check if it's a user ID
             const user = await User.findById(referredCustomerId);
             if (user) {
-                // Create a customer record for the user
-                customer = new Customer({
+                // Check if the customer already exists with the same businessId and email
+                customer = await Customer.findOne({
                     businessId: campaign.businessId,
-                    email: user.email,
-                    name: user.name,
-                    source: 'referral',
-                    status: 'active'
+                    email: user.email
                 });
-                await customer.save();
 
-                // Add customer to business profile
-                await BusinessProfile.findOneAndUpdate(
-                    { userId: campaign.businessId },
-                    { $push: { customers: customer._id } }
-                );
+                if (!customer) {
+                    // Create a new customer record for the user
+                    customer = new Customer({
+                        businessId: campaign.businessId,
+                        email: user.email,
+                        name: user.name,
+                        source: 'referral',
+                        status: 'active'
+                    });
+                    await customer.save(); // Save the new customer
+                } else {
+                    console.log('Customer already exists:', customer);
+                }
             } else {
                 return res.status(404).json({ message: 'Neither customer nor user found with provided ID' });
             }
         }
 
         // Check if this customer has already been converted
-        const existingConversion = referral.conversions.find(
-            conv => conv.referredCustomerId && conv.referredCustomerId.toString() === customer._id.toString()
-        );
-        if (existingConversion) {
-            return res.status(400).json({ message: 'This customer has already been converted' });
-        }
+       
 
         // Add conversion record with the customer ID
         referral.conversions.push({

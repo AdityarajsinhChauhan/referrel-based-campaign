@@ -98,6 +98,7 @@ function ReferralLanding() {
                                 Sign up to Claim Reward
                             </button>
                             <p className="text-sm text-gray-600">
+
                                 Already have an account? <button onClick={() => navigate('/')} className="text-blue-500 hover:text-blue-600">Log in</button>
                             </p>
                         </div>

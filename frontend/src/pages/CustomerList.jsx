@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import AddCustomer from './AddCustomer';
 
 function CustomerList() {
   const { user } = useAuth();
@@ -35,16 +36,10 @@ function CustomerList() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-6xl mx-auto">
+      <AddCustomer onCustomerAdded={fetchCustomers} />
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Customers</h1>
         <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
@@ -52,9 +47,13 @@ function CustomerList() {
         </span>
       </div>
 
-      {customers.length === 0 ? (
+      {error ? (
+        <div className="text-center py-8">
+          <p className="text-red-500">{error}</p>
+        </div>
+      ) : customers.length === 0 ? (
         <div className="bg-white shadow-md rounded-lg p-6 text-center">
-          <p className="text-gray-500">No customers found. Connect your CRM to import customers.</p>
+          <p className="text-gray-500">No customers found. Please add a customer using the form above.</p>
         </div>
       ) : (
         <div className="bg-white shadow-md rounded-lg overflow-hidden">

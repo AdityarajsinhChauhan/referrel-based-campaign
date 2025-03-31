@@ -38,20 +38,21 @@ function ReferredSignup() {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
-                referralCode: code // Pass the referral code
+                referralCode: code // Pass the referral 
             });
+            console.log(signupResponse.data);
 
             // If signup successful, track the conversion
             if (signupResponse.data.token) {
                 await axios.post(`http://localhost:5000/api/referrals/convert/${code}`, {
-                    referredCustomerId: signupResponse.data.user._id
+                    referredCustomerId: signupResponse.data.user.id
                 });
 
                 // Store the token
                 localStorage.setItem('token', signupResponse.data.token);
                 
                 // Redirect to dashboard or welcome page
-                navigate('/welcome');
+                navigate(`/customer/campaigns`);
             }
         } catch (error) {
             setError(error.response?.data?.message || 'Error during signup');

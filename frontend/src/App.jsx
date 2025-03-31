@@ -12,6 +12,7 @@ import CampaignEdit from './pages/CampaignEdit';
 import CampaignReferrals from './pages/CampaignReferrals';
 import ReferralLanding from './pages/ReferralLanding';
 import ReferredSignup from './pages/ReferredSignup';
+import CustomerCampaigns from './pages/CustomerCampaigns';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Integrations from './pages/Integrations';
 
@@ -48,7 +49,7 @@ function App() {
                   <CampaignList />
                 </ProtectedRoute>
               } />
-              <Route path="/campaigns/:id/edit" element={
+              <Route path="/campaigns/edit/:id/" element={
                 <ProtectedRoute>
                   <CampaignEdit />
                 </ProtectedRoute>
@@ -57,6 +58,9 @@ function App() {
                 <ProtectedRoute>
                   <CampaignReferrals />
                 </ProtectedRoute>
+              } />
+              <Route path="/customer/campaigns" element={
+                  <CustomerCampaigns />
               } />
               <Route path="/r/:code" element={<ReferralLanding />} />
               <Route path="/signup/:code" element={<ReferredSignup />} />

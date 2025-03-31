@@ -46,11 +46,14 @@ router.post('/profile', isAuthenticated, async (req, res) => {
 router.get('/customers', isAuthenticated, async (req, res) => {
     try {
         const profile = await BusinessProfile.findOne({ userId: req.user.id });
+        // console.log(profile);
         if (!profile) {
             return res.status(404).json({ message: 'Business profile not found' });
         }
+        console.log(profile.userId); 
 
-        const customers = await Customer.find({ businessId: profile._id });
+        const customers = await Customer.find({ businessId: profile.userId });
+        // console.log(customers);
         res.json(customers);
     } catch (error) {
         console.error('Error fetching customers:', error);
