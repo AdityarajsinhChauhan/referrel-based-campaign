@@ -16,7 +16,7 @@ const AddCustomer = ({ onCustomerAdded }) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post('http://localhost:5000/api/customers', {
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/customers`, {
                 ...customer,
                 businessId: user.id // Assuming user.id is the business ID
             }, {

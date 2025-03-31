@@ -23,15 +23,15 @@ function CampaignReferrals() {
             const headers = { Authorization: `Bearer ${token}` };
 
             // Fetch campaign details
-            const campaignRes = await axios.get(`http://localhost:5000/api/campaigns/${campaignId}`, { headers });
+            const campaignRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${campaignId}`, { headers });
             setCampaign(campaignRes.data);
 
             // Fetch customers
-            const customersRes = await axios.get('http://localhost:5000/api/business/customers', { headers });
+            const customersRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/business/customers`, { headers });
             setCustomers(customersRes.data);
 
             // Fetch referral stats
-            const statsRes = await axios.get(`http://localhost:5000/api/referrals/stats/${campaignId}`, { headers });
+            const statsRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/referrals/stats/${campaignId}`, { headers });
             setStats(statsRes.data);
         } catch (error) {
             setError(error.response?.data?.message || 'Error fetching data');
@@ -48,7 +48,7 @@ function CampaignReferrals() {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post('http://localhost:5000/api/referrals/generate', 
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/referrals/generate`, 
                 {
                     campaignId,
                     customerId: selectedCustomer
@@ -81,7 +81,7 @@ function CampaignReferrals() {
         try {
             const token = localStorage.getItem('token');
             await axios.post(
-                `http://localhost:5000/api/referrals/complete-task/${referralCode}`,
+                `${import.meta.env.VITE_BACKEND_URL}/api/referrals/complete-task/${referralCode}`,
                 {
                     conversionId,
                     taskCompletionProof: 'Task completed via dashboard'
@@ -109,7 +109,7 @@ function CampaignReferrals() {
         try {
             const token = localStorage.getItem('token');
             await axios.post(
-                `http://localhost:5000/api/referrals/claim-reward/${referralCode}`,
+                `${import.meta.env.VITE_BACKEND_URL}/api/referrals/claim-reward/${referralCode}`,
                 { conversionId },
                 {
                     headers: { Authorization: `Bearer ${token}` }

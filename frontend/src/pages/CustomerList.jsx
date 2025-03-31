@@ -16,7 +16,7 @@ function CustomerList() {
   const fetchCustomers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/business/customers', {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/business/customers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCustomers(response.data);

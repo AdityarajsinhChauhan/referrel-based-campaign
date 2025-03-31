@@ -34,7 +34,7 @@ function ReferredSignup() {
 
         try {
             // First create the user account
-            const signupResponse = await axios.post('http://localhost:5000/api/auth/signup', {
+            const signupResponse = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/signup`, {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
@@ -44,7 +44,7 @@ function ReferredSignup() {
 
             // If signup successful, track the conversion
             if (signupResponse.data.token) {
-                await axios.post(`http://localhost:5000/api/referrals/convert/${code}`, {
+                await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/referrals/convert/${code}`, {
                     referredCustomerId: signupResponse.data.user.id
                 });
 

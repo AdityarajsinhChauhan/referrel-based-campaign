@@ -27,7 +27,7 @@ function CampaignCreate() {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/campaigns', campaign, {
+            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns`, campaign, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSuccess(true);

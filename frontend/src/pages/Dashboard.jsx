@@ -23,12 +23,12 @@ function Dashboard() {
       const headers = { Authorization: `Bearer ${token}` };
 
       // Fetch campaigns
-      const campaignsRes = await axios.get('http://localhost:5000/api/campaigns', { headers });
+      const campaignsRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns`, { headers });
       const activeCampaigns = campaignsRes.data.filter(c => c.status === 'active');
       setRecentCampaigns(campaignsRes.data.slice(0, 3)); // Get 3 most recent campaigns
 
       // Fetch customers
-      const customersRes = await axios.get('http://localhost:5000/api/business/customers', { headers });
+      const customersRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/business/customers`, { headers });
 
       setStats({
         totalCustomers: customersRes.data.length,

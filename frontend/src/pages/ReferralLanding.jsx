@@ -15,7 +15,7 @@ function ReferralLanding() {
 
     const trackReferral = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/referrals/track/${code}`);
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/referrals/track/${code}`);
             setCampaign(response.data.campaign);
         } catch (error) {
             setError(error.response?.data?.message || 'Invalid referral link');

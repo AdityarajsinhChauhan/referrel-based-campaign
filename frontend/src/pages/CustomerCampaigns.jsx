@@ -10,7 +10,7 @@ const CustomerCampaigns = () => {
     useEffect(() => {
         const fetchCampaigns = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/customers/campaigns', {
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/customers/campaigns`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }

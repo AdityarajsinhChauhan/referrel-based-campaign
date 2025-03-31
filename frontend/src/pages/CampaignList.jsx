@@ -15,7 +15,7 @@ function CampaignList() {
     const fetchCampaigns = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/campaigns', {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCampaigns(response.data);
@@ -33,7 +33,7 @@ function CampaignList() {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/campaigns/${id}`, {
+            await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setDeleteSuccess('Campaign deleted successfully');

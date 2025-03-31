@@ -23,7 +23,7 @@ function BusinessProfile() {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/business/profile', {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/business/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -51,7 +51,7 @@ function BusinessProfile() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/business/profile', profile, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/business/profile`, profile, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage('Profile updated successfully!');
@@ -65,7 +65,7 @@ function BusinessProfile() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/business/zapier/connect', zapier, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/business/zapier/connect`, zapier, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage('Zapier integration successful!');

@@ -29,7 +29,7 @@ function CampaignEdit() {
     const fetchCampaign = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`http://localhost:5000/api/campaigns/${id}`, {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Format dates to YYYY-MM-DD for input type="date"
@@ -54,7 +54,7 @@ function CampaignEdit() {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/campaigns/${id}`, campaign, {
+            await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${id}`, campaign, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSuccess(true);

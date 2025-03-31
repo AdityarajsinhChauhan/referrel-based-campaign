@@ -22,7 +22,7 @@ function Integrations() {
     const fetchIntegrations = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/integrations', {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/integrations`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setIntegrations(response.data);
@@ -39,7 +39,7 @@ function Integrations() {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.post(
-                'http://localhost:5000/api/integrations',
+                `${import.meta.env.VITE_BACKEND_URL}/api/integrations`,
                 newIntegration,
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -66,7 +66,7 @@ function Integrations() {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.post(
-                `http://localhost:5000/api/integrations/${integrationId}/sync`,
+                `${import.meta.env.VITE_BACKEND_URL}/api/integrations/${integrationId}/sync`,
                 {},
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -88,7 +88,7 @@ function Integrations() {
         try {
             const token = localStorage.getItem('token');
             await axios.delete(
-                `http://localhost:5000/api/integrations/${integrationId}`,
+                `${import.meta.env.VITE_BACKEND_URL}/api/integrations/${integrationId}`,
                 {
                     headers: { Authorization: `Bearer ${token}` }
                 }
